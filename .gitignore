@@ -48,3 +48,5 @@ venv/
 .vscode/
 Thumbs.db
 .DS_Store
+# === Temuan privat (kode rekan tim yang belum diperbaiki) ===
+/private/
