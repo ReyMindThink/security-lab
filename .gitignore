@@ -1,0 +1,50 @@
+# === Secret dan kredensial (JANGAN PERNAH commit) ===
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+*.p12
+id_rsa*
+*.kdbx
+secrets/
+*.tfvars
+
+# === Data mentah, log, dan tangkapan jaringan ===
+/data/
+/logs/
+*.log
+*.pcap
+*.pcapng
+
+# === Sampel malware dan dump firmware ===
+/samples/
+/firmware/
+*.elf
+*.hex
+
+# === Salinan kode target milik rekan tim (clone/fork taruh di sini) ===
+/targets/
+
+# === Hasil scan mentah (hanya hasil yang sudah disanitasi boleh di-commit) ===
+/results/raw/
+
+# === Backup dan disk virtual ===
+*.tar
+*.tar.gz
+*.bak
+*.mdf
+*.ldf
+*.vhdx
+
+# === Dependensi dan cache ===
+node_modules/
+__pycache__/
+.venv/
+venv/
+
+# === Sampah editor dan OS ===
+.vscode/
+Thumbs.db
+.DS_Store
