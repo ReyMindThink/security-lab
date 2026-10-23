@@ -11,7 +11,7 @@ Bahasa: [English](README.md) | Bahasa Indonesia
 
 | Fase | Fokus | Status |
 |---|---|---|
-| 0 | Setup repositori dan lab | Sedang berjalan |
+| 0 | Setup repositori dan lab | Selesai |
 | 1 | Secure SDLC pada aplikasi milik sendiri (threat model, SAST, DAST, uji manual, perbaikan) | Belum dimulai |
 | 2 | Honeypot dan detection engineering | Belum dimulai |
 | 3 | Keamanan IoT (opsional) | Belum dimulai |

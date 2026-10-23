@@ -10,7 +10,7 @@ Languages: English | [Bahasa Indonesia](README.id.md)
 
 | Phase | Focus | Status |
 |---|---|---|
-| 0 | Repository and lab setup | In progress |
+| 0 | Repository and lab setup | Done |
 | 1 | Secure SDLC on my own applications (threat model, SAST, DAST, manual testing, fixes) | Not started |
 | 2 | Honeypot and detection engineering | Not started |
 | 3 | IoT security (optional) | Not started |
