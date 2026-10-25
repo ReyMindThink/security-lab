@@ -1,12 +1,12 @@
 # Threat Model: PatunganKu backend
 
-Status: draft, part 2 of 3 (adds STRIDE per trust boundary). Test priority and test case mapping follow in part 3. This file contains no findings.
+Status: draft, part 3 of 3 (adds test plan with case IDs). No results are recorded here. This file contains no findings.
 
 Target: ReyMindThink/PatunganKu, branch main, commit 0d7098b (backend only).
 
 ## Ringkasan (Bahasa Indonesia)
 - Model ancaman untuk backend PatunganKu (aplikasi patungan biaya) pada commit yang dikunci.
-- Bagian 1 memuat deskripsi sistem, aset, aktor, diagram aliran data, dan batas kepercayaan. Bagian 2 memuat analisis STRIDE per batas kepercayaan. Prioritas uji ada di bagian 3.
+- Bagian 1 memuat deskripsi sistem, aset, aktor, diagram aliran data, dan batas kepercayaan. Bagian 2 memuat analisis STRIDE per batas kepercayaan. Bagian 3 memuat rencana uji dengan ID kasus uji. Belum ada hasil uji di dokumen ini.
 - Disusun dari pembacaan kode oleh LLM yang belum diverifikasi mandiri oleh penulis, bukan dari menjalankan aplikasi. Hal yang bergantung pada deployment ditulis "tidak ditentukan".
 - Dokumen ini tidak memuat temuan atau detail kerentanan.
 
@@ -146,5 +146,37 @@ Categories: S spoofing, T tampering, R repudiation, I information disclosure, D 
 | Secrets and configuration in the repository and documentation | Secret scan of the pinned commit (values never printed) |
 | Error logging | Review of what is logged on errors (reading only) |
 
+## Test plan
+
+Order is the sequence in which tests are planned, not a severity. P1 means the test covers data or money of other users, or is cheap and automated. P2 covers integrity of derived state, cost and availability. P3 is review or hardening. The order is a planning judgement and will be revisited after the baseline scans. All tests run on the local test environment only. Results stay private until a fix is confirmed.
+
+| ID | Boundary and category | Test | Order | Result |
+|---|---|---|---|---|
+| PK-T01 | TB1 S | Token handling and login behavior | P1 | Not run |
+| PK-T02 | TB1 T | Input validation and boundary tests per endpoint | P2 | Not run |
+| PK-T03 | TB1 R | Review of what the application records about actions | P3 | Not run |
+| PK-T04 | TB1 I | Response comparison for existing and non-existing objects; error response review | P2 | Not run |
+| PK-T05 | TB1 D | Bounded load test of costly operations | P2 | Not run |
+| PK-T06 | TB1 E | Access matrix across all endpoints and actor types | P1 | Not run |
+| PK-T07 | TB2 T | Injection tests on inputs that reach queries | P1 | Not run |
+| PK-T08 | TB2 I | Response field review per endpoint | P1 | Not run |
+| PK-T09 | TB2 D | Large-data tests | P3 | Not run |
+| PK-T10 | TB2 E | Privilege review of the local test login | P3 | Not run |
+| PK-T11 | TB3 T | File type, size and malformed file tests | P2 | Not run |
+| PK-T12 | TB3 T | State transition tests on receipt status | P2 | Not run |
+| PK-T13 | TB3 I | Object access tests through the API | P1 | Not run |
+| PK-T14 | TB3 D | Bounded upload tests | P3 | Not run |
+| PK-T15 | TB4 S | Decision-logic tests with mocked results around each threshold | P2 | Not run |
+| PK-T16 | TB4 T | Decision-logic tests with a local mock and crafted content | P3 | Not run |
+| PK-T17 | TB4 I | Data flow review of what is sent and whether users are told | P2 | Not run |
+| PK-T18 | TB4 D | Count external calls per user action using the local mock | P2 | Not run |
+| PK-T19 | TB5 S | Join behavior tests | P2 | Not run |
+| PK-T20 | TB5 T | State and ownership tests on expense and payment creation | P1 | Not run |
+| PK-T21 | TB5 I | Response field review for group detail and history | P1 | Not run |
+| PK-T22 | TB5 E | Role matrix tests for every action | P1 | Not run |
+| PK-T23 | Cross-cutting | Dependency scan; install with lifecycle scripts disabled | P1 | Not run |
+| PK-T24 | Cross-cutting | Secret scan of the pinned commit, values never printed | P1 | Not run |
+| PK-T25 | Cross-cutting | Review of what is logged on errors | P3 | Not run |
+
 ## Next
-Part 3: test priority (an order for testing, not a severity) and a test case ID for each row above.
+Build and verify the test environment, run the baseline scans (PK-T23, PK-T24), then execute the tests in order. A result is recorded as a finding only after manual verification.
