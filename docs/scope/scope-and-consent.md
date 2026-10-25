@@ -31,7 +31,7 @@ re-pinned and the change is recorded here.
   found in the repositories.
 - Any third-party or cloud service used by the applications: cloud databases,
   payment gateways (including sandboxes), object storage, AI APIs, email services.
-- Credentials found in repositories or documentation. They are not tried anywhere.
+- Credentials found in repositories or documentation, except the publicly documented development account of the storage emulator (used only against the local emulator). They are not tried anywhere.
 - Other people's systems, accounts, and networks.
 - Tunnels or any setup that exposes a local test instance to the internet.
 
@@ -39,7 +39,7 @@ re-pinned and the change is recorded here.
 - Local database containers created for testing only. No connection strings or
   .env files from the teams' working copies are copied into the clones.
 - External integrations are replaced by local mocks or left disabled.
-- No API keys of any kind in the test environment.
+- No real third-party API keys or credentials in the test environment. The storage emulator uses its publicly documented development account, which is not a real credential.
 - Automated scanners run only against the local instance, never against a hostname.
 
 ## Consent
