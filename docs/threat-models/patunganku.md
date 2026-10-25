@@ -1,12 +1,12 @@
 # Threat Model: PatunganKu backend
 
-Status: draft, part 1 of 2 (system, assets, actors, data flows, trust boundaries). STRIDE analysis and risk ranking follow in part 2. This file contains no findings.
+Status: draft, part 2 of 3 (adds STRIDE per trust boundary). Test priority and test case mapping follow in part 3. This file contains no findings.
 
 Target: ReyMindThink/PatunganKu, branch main, commit 0d7098b (backend only).
 
 ## Ringkasan (Bahasa Indonesia)
 - Model ancaman untuk backend PatunganKu (aplikasi patungan biaya) pada commit yang dikunci.
-- Bagian 1 memuat deskripsi sistem, aset, aktor, diagram aliran data, dan batas kepercayaan. Analisis STRIDE dan prioritas risiko ada di bagian 2.
+- Bagian 1 memuat deskripsi sistem, aset, aktor, diagram aliran data, dan batas kepercayaan. Bagian 2 memuat analisis STRIDE per batas kepercayaan. Prioritas uji ada di bagian 3.
 - Disusun dari pembacaan kode oleh LLM yang belum diverifikasi mandiri oleh penulis, bukan dari menjalankan aplikasi. Hal yang bergantung pada deployment ditulis "tidak ditentukan".
 - Dokumen ini tidak memuat temuan atau detail kerentanan.
 
@@ -91,5 +91,60 @@ flowchart LR
 - Hosting, network exposure, cloud configuration and secrets management of any deployed instance (out of scope, never contacted).
 - The client application.
 
+## STRIDE by trust boundary
+
+These are categories of threat to test, not findings. Each row says in general terms what could go wrong and which kind of test in the manual testing phase will check it, on a local test instance only. Nothing here states that a weakness exists.
+
+Categories: S spoofing, T tampering, R repudiation, I information disclosure, D denial of service, E elevation of privilege.
+
+### TB1 Client to API
+| Cat | Threat | Planned test |
+|---|---|---|
+| S | Forged, tampered, expired or replayed bearer tokens; guessing of login credentials; registration with an email address the registrant does not own | Token handling tests (tampered, expired, missing claims, unexpected algorithm); repeated login attempts against the local instance |
+| T | Crafted bodies and URL parameters (wrong types, extreme values, extra fields, identifiers of other objects) | Input validation and boundary tests per endpoint |
+| R | Changes to financial records without a trace of who made them | Review of what the application records about actions (reading only) |
+| I | Responses or error messages that reveal whether accounts or objects exist, or data of other groups | Compare responses for existing and non-existing objects; error response review |
+| D | One client repeating costly operations (password hashing, uploads, external calls) | Bounded load test against the local instance only |
+| E | Acting in a group without membership, or doing what is reserved for another member | Access matrix: every endpoint against anonymous, non-member, member and the other party of a payment |
+
+### TB2 API to database
+| Cat | Threat | Planned test |
+|---|---|---|
+| T | Input reaching queries (injection) | Injection tests on every input that reaches a query |
+| I | Over-broad data returned from queries | Response field review per endpoint |
+| D | Expensive queries or unbounded result sets | Large-data tests on the local database |
+| E | Application database login with more privileges than needed | Privilege review of the local test login (any deployed instance is not examined) |
+
+### TB3 API to blob storage
+| Cat | Threat | Planned test |
+|---|---|---|
+| T | Files that are not images, crafted files, oversized files | File type, size and malformed file tests with the local storage emulator |
+| T | A stored file replaced after it was accepted | State transition tests on receipt status |
+| I | Stored images reachable by someone who should not see them | Object access tests through the API |
+| D | Many or large uploads | Bounded upload tests on the local instance |
+
+### TB4 API to AI API
+| Cat | Threat | Planned test |
+|---|---|---|
+| S | A fake receipt accepted as genuine | Decision-logic tests with mocked results around each threshold |
+| T | Image content crafted to influence the AI result | Decision-logic tests with a local mock of the AI response; no traffic to the real service |
+| I | Personal data inside images leaves the system | Data flow review: what is sent, and whether users are told (documentation review) |
+| D | Repeated calls consuming a metered quota | Count external calls per user action using the local mock |
+
+### TB5 Group membership
+| Cat | Threat | Planned test |
+|---|---|---|
+| S | Joining a group by guessing or sharing the join code | Join behavior tests on the local instance |
+| T | A member recording expenses or payments that affect other members | State and ownership tests on expense and payment creation |
+| I | A new member seeing history and personal details of other members | Response field review for group detail and history |
+| E | Role labels versus the permissions that are actually enforced | Role matrix tests for every action |
+
+### Cross-cutting
+| Area | Planned test |
+|---|---|
+| Dependencies and install scripts | Dependency scan; install with lifecycle scripts disabled |
+| Secrets and configuration in the repository and documentation | Secret scan of the pinned commit (values never printed) |
+| Error logging | Review of what is logged on errors (reading only) |
+
 ## Next
-Part 2: STRIDE per component and flow, risk ranking, and mapping of each risk to a test in the manual testing phase.
+Part 3: test priority (an order for testing, not a severity) and a test case ID for each row above.
