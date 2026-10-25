@@ -7,11 +7,11 @@ Target: ReyMindThink/PatunganKu, branch main, commit 0d7098b (backend only).
 ## Ringkasan (Bahasa Indonesia)
 - Model ancaman untuk backend PatunganKu (aplikasi patungan biaya) pada commit yang dikunci.
 - Bagian 1 memuat deskripsi sistem, aset, aktor, diagram aliran data, dan batas kepercayaan. Analisis STRIDE dan prioritas risiko ada di bagian 2.
-- Disusun dari pembacaan kode, bukan dari menjalankan aplikasi. Hal yang bergantung pada deployment ditulis "tidak ditentukan".
+- Disusun dari pembacaan kode oleh LLM yang belum diverifikasi mandiri oleh penulis, bukan dari menjalankan aplikasi. Hal yang bergantung pada deployment ditulis "tidak ditentukan".
 - Dokumen ini tidak memuat temuan atau detail kerentanan.
 
 ## Method
-Built from a manual reading of the application code at the pinned commit: entry
+Built from a reading of the application code at the pinned commit, performed by an LLM from curated code bundles and not yet independently verified by the author (LLM output is treated as a hypothesis): entry
 points, configuration, routes, middleware, libraries, services, utilities,
 validators and the database schema. Nothing was run. Deployment details (network,
 TLS, hosting, cloud configuration) were not examined and are marked as
@@ -40,6 +40,7 @@ bcrypt password hashes, zod input validation.
 | Service credentials (database, blob storage, AI API) | Grant access to data stores and paid services |
 | AI API quota and cost | Metered external service |
 | Service availability | Group members depend on correct balances |
+
 ## Actors
 | Actor | Description |
 |---|---|
