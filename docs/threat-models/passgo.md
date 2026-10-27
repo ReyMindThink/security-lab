@@ -1,12 +1,12 @@
 # Threat Model: PassGo backend
 
-Status: draft, part 2 of 3 (adds STRIDE by trust boundary). No results are recorded here. This file contains no findings.
+Status: draft, part 3 of 3 (adds the test plan). No results are recorded here. This file contains no findings.
 
 Target: gadicandra/PassGo, branch staging, commit e2bfb20 (backend only).
 
 ## Ringkasan (Bahasa Indonesia)
 - Model ancaman untuk backend PassGo (penjualan tiket acara komunitas) pada commit yang dikunci.
-- Bagian 1 memuat deskripsi sistem, aset, aktor, diagram aliran data, dan batas kepercayaan. Bagian 2 memuat analisis STRIDE per batas kepercayaan. Bagian 3 (rencana uji dengan ID kasus uji) akan menyusul. Belum ada hasil uji di dokumen ini.
+- Bagian 1 memuat deskripsi sistem, aset, aktor, diagram aliran data, dan batas kepercayaan. Bagian 2 memuat analisis STRIDE per batas kepercayaan. Bagian 3 memuat rencana uji dengan ID kasus uji; semuanya berstatus Not run. Belum ada hasil uji di dokumen ini.
 - Disusun dari pembacaan kode oleh LLM yang belum diverifikasi mandiri oleh penulis, bukan dari menjalankan aplikasi. Hal yang bergantung pada deployment ditulis "tidak ditentukan".
 - Dokumen ini tidak memuat temuan atau detail kerentanan.
 
@@ -175,5 +175,51 @@ Categories: S spoofing, T tampering, R repudiation, I information disclosure, D 
 | Behind a proxy | Review of how client address and protocol are determined |
 | The repository's own tests | Reading the tests before running anything, because some may expect external services |
 
+## Test plan
+
+Order is the sequence in which tests are planned, not a severity. P1 means the test covers data or money of other users, access control, or is cheap and automated. P2 covers integrity of derived state, cost and availability. P3 is review or hardening. The order is a planning judgement and will be revisited after the baseline scans. All tests run on the local test environment only. Results stay private until a fix is confirmed.
+
+| ID | Boundary and category | Test | Order | Result |
+|---|---|---|---|---|
+| PG-T01 | TB1 S | Token handling, refresh token lifecycle and login behavior | P1 | Not run |
+| PG-T02 | TB1 T | Input validation, boundary, idempotency and cross-origin tests per route | P2 | Not run |
+| PG-T03 | TB1 R | Review of what the audit log and other records cover | P3 | Not run |
+| PG-T04 | TB1 I | Response and response-time comparison (many samples) for existing and non-existing objects; error response review | P2 | Not run |
+| PG-T05 | TB1 D | Bounded load tests of costly operations; review of which routes limit request rates | P2 | Not run |
+| PG-T06 | TB1 E | Access matrix across all routes and actor types | P1 | Not run |
+| PG-T07 | TB2 T | Injection tests on inputs that reach queries, including search parameters | P1 | Not run |
+| PG-T08 | TB2 T | Update path validation and parallel request tests | P2 | Not run |
+| PG-T09 | TB2 I | Response field review per route | P1 | Not run |
+| PG-T10 | TB2 D | Large-data tests | P3 | Not run |
+| PG-T11 | TB2 E | Privilege review of the local test login | P3 | Not run |
+| PG-T12 | TB3 T | File type, size, malformed image and name tests in the local disk mode | P2 | Not run |
+| PG-T13 | TB3 T | Ownership tests on poster routes | P2 | Not run |
+| PG-T14 | TB3 I | Object access tests through the API and the local static route | P2 | Not run |
+| PG-T15 | TB3 D | Bounded upload tests | P3 | Not run |
+| PG-T16 | TB4 S | Payment notification tests with signatures computed locally from a made-up key | P1 | Not run |
+| PG-T17 | TB4 T | Price, quantity and boundary tests on order creation | P1 | Not run |
+| PG-T18 | TB4 R | Review of audit coverage for payments and refunds | P3 | Not run |
+| PG-T19 | TB4 I | Review of responses and stored records | P2 | Not run |
+| PG-T20 | TB4 D | Failure injection with a local mock of the gateway module; stock holding tests | P2 | Not run |
+| PG-T21 | TB5 E | Access matrix and object-level tests with own and other users' identifiers | P1 | Not run |
+| PG-T22 | TB5 E | Token behavior tests after role change, deactivation and password reset | P1 | Not run |
+| PG-T23 | TB5 T | State transition and repeat-request tests | P2 | Not run |
+| PG-T24 | TB5 R | Review of audit coverage for staff assignment, role change and account management | P3 | Not run |
+| PG-T25 | TB5 I | Response field review per role | P1 | Not run |
+| PG-T26 | TB5 D | Bounded tests with large local data | P3 | Not run |
+| PG-T27 | TB6 S | Authentication tests of the internal route | P1 | Not run |
+| PG-T28 | TB6 T | Repeat and parallel job run tests | P2 | Not run |
+| PG-T29 | TB6 I | Response review of the internal route | P3 | Not run |
+| PG-T30 | TB6 D | Bounded repeat tests | P3 | Not run |
+| PG-T31 | TB7 S | Response uniformity and email count tests | P2 | Not run |
+| PG-T32 | TB7 T | Injection tests on fields that reach email content | P2 | Not run |
+| PG-T33 | TB7 I | Review of outbox records and logs | P2 | Not run |
+| PG-T34 | TB7 D | Email count tests per user action | P2 | Not run |
+| PG-T35 | Cross-cutting | Dependency scan; install with lifecycle scripts disabled | P1 | Not run |
+| PG-T36 | Cross-cutting | Secret scan of the pinned commit, values never printed; review of how completely configuration is documented | P1 | Not run |
+| PG-T37 | Cross-cutting | Review of what is logged and returned on errors | P3 | Not run |
+| PG-T38 | Cross-cutting | Review of how client address and protocol are determined behind a proxy | P3 | Not run |
+| PG-T39 | Cross-cutting | Reading the repository's own tests before running anything | P1 | Not run |
+
 ## Next
-Part 3 will add a test plan with case IDs. Results are recorded only after local testing and owner confirmation of fixes, in sanitized form.
+Read the repository's own tests (PG-T39), build and verify the test environment, run the baseline scans (PG-T35, PG-T36), then execute the tests in order. A result is recorded as a finding only after manual verification, and published only in sanitized form after the owner confirms the fix.
