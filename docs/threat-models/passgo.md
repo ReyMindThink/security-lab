@@ -1,12 +1,12 @@
 # Threat Model: PassGo backend
 
-Status: draft, part 1 of 3 (system, assets, actors, data flow, trust boundaries). No results are recorded here. This file contains no findings.
+Status: draft, part 2 of 3 (adds STRIDE by trust boundary). No results are recorded here. This file contains no findings.
 
 Target: gadicandra/PassGo, branch staging, commit e2bfb20 (backend only).
 
 ## Ringkasan (Bahasa Indonesia)
 - Model ancaman untuk backend PassGo (penjualan tiket acara komunitas) pada commit yang dikunci.
-- Bagian 1 memuat deskripsi sistem, aset, aktor, diagram aliran data, dan batas kepercayaan. Bagian 2 (analisis STRIDE per batas kepercayaan) dan bagian 3 (rencana uji dengan ID kasus uji) akan menyusul. Belum ada hasil uji di dokumen ini.
+- Bagian 1 memuat deskripsi sistem, aset, aktor, diagram aliran data, dan batas kepercayaan. Bagian 2 memuat analisis STRIDE per batas kepercayaan. Bagian 3 (rencana uji dengan ID kasus uji) akan menyusul. Belum ada hasil uji di dokumen ini.
 - Disusun dari pembacaan kode oleh LLM yang belum diverifikasi mandiri oleh penulis, bukan dari menjalankan aplikasi. Hal yang bergantung pada deployment ditulis "tidak ditentukan".
 - Dokumen ini tidak memuat temuan atau detail kerentanan.
 
@@ -98,5 +98,82 @@ flowchart LR
 - The configuration of the payment gateway account and of the poster storage service.
 - The client application.
 
+## STRIDE by trust boundary
+
+These are categories of threat to test, not findings. Each row says in general terms what could go wrong and which kind of test in the manual testing phase will check it, on a local test instance only. Nothing here states that a weakness exists.
+
+Categories: S spoofing, T tampering, R repudiation, I information disclosure, D denial of service, E elevation of privilege.
+
+### TB1 Client to API
+| Cat | Threat | Planned test |
+|---|---|---|
+| S | Forged, tampered, expired or replayed access tokens; refresh tokens used after logout, password reset, deactivation or rotation, or used twice at the same time; guessing of login credentials; registration with an email address the registrant does not own | Token handling tests (tampered, expired, missing claims, unexpected algorithm); refresh token lifecycle tests (rotation, reuse, parallel use, each revocation path); repeated login attempts against the local instance |
+| T | Crafted bodies, query parameters and headers (wrong types, extreme values, extra fields, identifiers of other objects, repeated request keys); requests from other origins that carry the refresh cookie | Input validation and boundary tests per route; idempotency and conditional update tests; origin allowlist tests on cookie-authenticated routes |
+| R | Account and role changes without a trace of who made them | Review of what the audit log and other records cover (reading only) |
+| I | Responses, response times or error messages that reveal whether accounts or objects exist, or data of other users | Compare responses and response times (many samples) for existing and non-existing objects; error response review |
+| D | One client repeating costly operations (password hashing, searches with user-supplied patterns, exports, bulk operations, uploads, routes that send email) | Bounded load tests against the local instance only; review of which routes limit request rates |
+| E | Reaching routes reserved for a higher role | Access matrix: every route against anonymous, attendee, staff (assigned and unassigned event) and organizer |
+
+### TB2 API to database
+| Cat | Threat | Planned test |
+|---|---|---|
+| T | User input reaching queries as operators or patterns (injection) | Injection tests on every input that reaches a query, including search parameters |
+| T | Updates that skip schema validation, and lost updates under concurrent requests | Update path validation tests; parallel request tests on the same object |
+| I | Over-broad data returned from queries, such as credential or token fields | Response field review per route |
+| D | Expensive queries, unbounded lists and large result sets | Large-data tests on the local database |
+| E | Application database login with more privileges than needed | Privilege review of the local test login (any deployed instance is not examined) |
+
+### TB3 API to poster storage
+| Cat | Threat | Planned test |
+|---|---|---|
+| T | Files that are not images, crafted or malformed images, oversized files, unexpected names or content types | File type, size, malformed image and name tests in the local disk mode (no storage credentials) |
+| T | A poster attached to or replaced on an event the user does not manage | Ownership tests on poster routes |
+| I | Stored files reachable by someone who should not see them | Object access tests through the API and the local static route |
+| D | Many, large or very high resolution uploads | Bounded upload tests on the local instance |
+
+### TB4 API and payment gateway
+| Cat | Threat | Planned test |
+|---|---|---|
+| S | Forged, replayed or mismatched payment notifications (wrong signature, wrong amount, unknown order, late arrival) | Notification tests with signatures computed locally from a made-up key; no traffic to the real service |
+| T | Client-influenced prices, quantities or totals; free orders | Price, quantity and boundary tests on order creation |
+| R | Payments and refunds without a trace | Review of audit coverage for payments and refunds (reading only) |
+| I | Gateway responses or tokens stored or returned beyond need | Review of responses and stored records in the local database |
+| D | Gateway failures or retries leaving inconsistent state; many pending orders holding stock | Failure injection with a local mock of the gateway module; stock holding tests |
+
+### TB5 Roles and event assignments
+| Cat | Threat | Planned test |
+|---|---|---|
+| E | Staff acting on events they are not assigned to; users reading or changing other users' orders and tickets; lower roles reaching organizer actions | Access matrix and object-level tests with own and other users' identifiers |
+| E | Role or status changes while an access token is still valid | Token behavior tests after role change, deactivation and password reset |
+| T | State changes with side effects (check-in reversal, event cancellation, role change, staff assignment) done out of order or twice | State transition and repeat-request tests |
+| R | Staff assignment, role change and account management not recorded | Review of audit coverage (reading only) |
+| I | Staff or buyers seeing more personal data than they need (attendee lists, search by email) | Response field review per role |
+| D | Bulk operations by privileged users (exports, reports, cancellation) on large data | Bounded tests with large local data |
+
+### TB6 Scheduler to internal jobs
+| Cat | Threat | Planned test |
+|---|---|---|
+| S | Calls to the internal route with no secret, a wrong secret, an empty configured secret, unexpected job names or other HTTP methods | Authentication tests of the internal route for each case, on the local instance |
+| T | Jobs run twice or at the same time (duplicate emails, expiry racing with payment) | Repeat and parallel job run tests |
+| I | Error responses that reveal internal state | Response review of the internal route |
+| D | Jobs triggered repeatedly | Bounded repeat tests on the local instance |
+
+### TB7 API to SMTP server
+| Cat | Threat | Planned test |
+|---|---|---|
+| S | Reset or verification emails triggered for addresses the requester does not own | Response uniformity and email count tests with the dry-run mode or a local mail catcher |
+| T | Header or content injection through user-supplied fields (names, event titles) in emails | Injection tests on fields that reach email content |
+| I | One-time links and ticket details kept or logged longer than needed (outbox records, logs) | Review of outbox records and logs in the local instance (values never published) |
+| D | Routes that cause many emails to one recipient or many recipients | Email count tests per user action in dry-run mode |
+
+### Cross-cutting
+| Area | Planned test |
+|---|---|
+| Dependencies and install scripts | Dependency scan; install with lifecycle scripts disabled |
+| Secrets and configuration in the repository and documentation | Secret scan of the pinned commit (values never printed); review of how completely configuration is documented |
+| Error logging and error messages | Review of what is logged and returned on errors, in production and non-production mode (reading only) |
+| Behind a proxy | Review of how client address and protocol are determined |
+| The repository's own tests | Reading the tests before running anything, because some may expect external services |
+
 ## Next
-Part 2 will add STRIDE by trust boundary. Part 3 will add a test plan with case IDs. Results are recorded only after local testing and owner confirmation of fixes, in sanitized form.
+Part 3 will add a test plan with case IDs. Results are recorded only after local testing and owner confirmation of fixes, in sanitized form.
