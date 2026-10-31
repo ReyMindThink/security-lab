@@ -98,6 +98,19 @@ flowchart LR
 - The configuration of the payment gateway account and of the poster storage service.
 - The client application.
 
+## Assumptions (from code reading, not independently verified)
+
+These are read from the pinned commit's source by an LLM and are treated as hypotheses
+until confirmed with the repository owners (see Methodology above).
+
+- Organizer authorization is flat across events: the `authorize("ORGANIZER")` role check
+  does not verify event ownership anywhere in the codebase examined. The `createdBy`
+  field recorded at event creation is stored but never used for authorization. In
+  practice, any ORGANIZER account can view, modify, publish, cancel, or manage the
+  staff and ticket types of any event, not only events it created. STAFF accounts are
+  restricted to assigned, non-DRAFT events via a separate check.
+- Whether this is an intentional single-tenant assumption or an oversight has not been
+  confirmed with the repository owners. Pending confirmation.
 ## STRIDE by trust boundary
 
 These are categories of threat to test, not findings. Each row says in general terms what could go wrong and which kind of test in the manual testing phase will check it, on a local test instance only. Nothing here states that a weakness exists.
