@@ -1,12 +1,12 @@
 # Threat Model: PassGo backend
 
-Status: draft, part 3 of 3 (adds the test plan). No results are recorded here. This file contains no findings.
+Status: draft, part 3 of 3 (adds the test plan). One test result is recorded (PG-T06, partial; see its row and the Assumptions section). This file contains no findings.
 
 Target: gadicandra/PassGo, branch staging, commit e2bfb20 (backend only).
 
 ## Ringkasan (Bahasa Indonesia)
 - Model ancaman untuk backend PassGo (penjualan tiket acara komunitas) pada commit yang dikunci.
-- Bagian 1 memuat deskripsi sistem, aset, aktor, diagram aliran data, dan batas kepercayaan. Bagian 2 memuat analisis STRIDE per batas kepercayaan. Bagian 3 memuat rencana uji dengan ID kasus uji; semuanya berstatus Not run. Belum ada hasil uji di dokumen ini.
+- Bagian 1 memuat deskripsi sistem, aset, aktor, diagram aliran data, dan batas kepercayaan. Bagian 2 memuat analisis STRIDE per batas kepercayaan. Bagian 3 memuat rencana uji dengan ID kasus uji; semuanya berstatus Not run kecuali PG-T06 (Partial). Satu-satunya hasil uji yang dicatat di dokumen ini adalah PG-T06; lihat barisnya dan bagian Assumptions.
 - Disusun dari pembacaan kode oleh LLM yang belum diverifikasi mandiri oleh penulis, bukan dari menjalankan aplikasi. Hal yang bergantung pada deployment ditulis "tidak ditentukan".
 - Dokumen ini tidak memuat temuan atau detail kerentanan.
 
@@ -98,17 +98,32 @@ flowchart LR
 - The configuration of the payment gateway account and of the poster storage service.
 - The client application.
 
-## Assumptions (from code reading, not independently verified)
+## Assumptions (from code reading unless marked as reproduced locally)
 
 These are read from the pinned commit's source by an LLM and are treated as hypotheses
 until confirmed with the repository owners (see Methodology above).
 
 - Organizer authorization is flat across events: the `authorize("ORGANIZER")` role check
   does not verify event ownership anywhere in the codebase examined. The `createdBy`
-  field recorded at event creation is stored but never used for authorization. In
-  practice, any ORGANIZER account can view, modify, publish, cancel, or manage the
-  staff and ticket types of any event, not only events it created. STAFF accounts are
-  restricted to assigned, non-DRAFT events via a separate check.
+  field recorded at event creation is stored but never used for authorization. STAFF
+  accounts are restricted to assigned, non-DRAFT events via a separate check
+  (`assertEventAccess`).
+  Status: reproduced locally (PG-T06, partial), on a local test instance with synthetic
+  data. A second ORGANIZER account viewed, modified, published, cancelled and (for DRAFT
+  events) deleted events created by another ORGANIZER, changed their ticket types and
+  removed a staff assignment. A STAFF account assigned to one event received 404 for an
+  unassigned PUBLISHED event and for a DRAFT event, and 403 on organizer-only routes; the
+  404 body of the attendees route for an existing unassigned event matched the body for a
+  random id once per-request fields were removed.
+- A matrix of 47 route and method combinations against four actors (anonymous, attendee,
+  staff, organizer) showed no role-level mismatch: no allowed actor was rejected with 401
+  or 403 and no disallowed actor was accepted. Two write routes under `/me` and the
+  payment notification route were tested anonymously only, and `POST /orders` was
+  recorded without an expectation.
+- Not covered by PG-T06 so far: object-level access across different users' orders and
+  tickets (PG-T21), real check-in data and STAFF scan scoping, the payment notification
+  route (PG-T16), the internal job routes beyond rejection without the secret (PG-T27),
+  and whether `POST /orders` accepts non-attendee roles with a valid body.
 - Whether this is an intentional single-tenant assumption or an oversight has not been
   confirmed with the repository owners. Pending confirmation.
 ## STRIDE by trust boundary
@@ -199,7 +214,7 @@ Order is the sequence in which tests are planned, not a severity. P1 means the t
 | PG-T03 | TB1 R | Review of what the audit log and other records cover | P3 | Not run |
 | PG-T04 | TB1 I | Response and response-time comparison (many samples) for existing and non-existing objects; error response review | P2 | Not run |
 | PG-T05 | TB1 D | Bounded load tests of costly operations; review of which routes limit request rates | P2 | Not run |
-| PG-T06 | TB1 E | Access matrix across all routes and actor types | P1 | Not run |
+| PG-T06 | TB1 E | Access matrix across all routes and actor types | P1 | Partial, see Assumptions |
 | PG-T07 | TB2 T | Injection tests on inputs that reach queries, including search parameters | P1 | Not run |
 | PG-T08 | TB2 T | Update path validation and parallel request tests | P2 | Not run |
 | PG-T09 | TB2 I | Response field review per route | P1 | Not run |
