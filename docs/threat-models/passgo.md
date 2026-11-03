@@ -1,12 +1,12 @@
 # Threat Model: PassGo backend
 
-Status: draft, part 3 of 3 (adds the test plan). One test result is recorded (PG-T06, partial; see its row and the Assumptions section). This file contains no findings.
+Status: draft, part 3 of 3 (adds the test plan). Seven test results are recorded (see the Result column and the Assumptions section). This file contains no findings.
 
 Target: gadicandra/PassGo, branch staging, commit e2bfb20 (backend only).
 
 ## Ringkasan (Bahasa Indonesia)
 - Model ancaman untuk backend PassGo (penjualan tiket acara komunitas) pada commit yang dikunci.
-- Bagian 1 memuat deskripsi sistem, aset, aktor, diagram aliran data, dan batas kepercayaan. Bagian 2 memuat analisis STRIDE per batas kepercayaan. Bagian 3 memuat rencana uji dengan ID kasus uji; semuanya berstatus Not run kecuali PG-T06 (Partial). Satu-satunya hasil uji yang dicatat di dokumen ini adalah PG-T06; lihat barisnya dan bagian Assumptions.
+- Bagian 1 memuat deskripsi sistem, aset, aktor, diagram aliran data, dan batas kepercayaan. Bagian 2 memuat analisis STRIDE per batas kepercayaan. Bagian 3 memuat rencana uji dengan ID kasus uji; semuanya berstatus Not run kecuali tujuh kasus yang tercatat di kolom Result (PG-T06, T07, T09, T16, T17, T21, T22). Hasil uji yang dicatat di dokumen ini hanya yang tercantum di kolom Result dan bagian Assumptions.
 - Disusun dari pembacaan kode oleh LLM yang belum diverifikasi mandiri oleh penulis, bukan dari menjalankan aplikasi. Hal yang bergantung pada deployment ditulis "tidak ditentukan".
 - Dokumen ini tidak memuat temuan atau detail kerentanan.
 
@@ -101,7 +101,7 @@ flowchart LR
 ## Assumptions (from code reading unless marked as reproduced locally)
 
 These are read from the pinned commit's source by an LLM and are treated as hypotheses
-until confirmed with the repository owners (see Methodology above).
+until confirmed with the repository owners (see Method above).
 
 - Organizer authorization is flat across events: the `authorize("ORGANIZER")` role check
   does not verify event ownership anywhere in the codebase examined. The `createdBy`
@@ -120,10 +120,13 @@ until confirmed with the repository owners (see Methodology above).
   or 403 and no disallowed actor was accepted. Two write routes under `/me` and the
   payment notification route were tested anonymously only, and `POST /orders` was
   recorded without an expectation.
-- Not covered by PG-T06 so far: object-level access across different users' orders and
-  tickets (PG-T21), real check-in data and STAFF scan scoping, the payment notification
-  route (PG-T16), the internal job routes beyond rejection without the secret (PG-T27),
-  and whether `POST /orders` accepts non-attendee roles with a valid body.
+- Not covered by PG-T06 so far: real check-in data and STAFF scan scoping, the internal
+  job routes beyond rejection without the secret (PG-T27), and whether `POST /orders`
+  accepts non-attendee roles with a valid body.
+- Reproduced locally (PG-T07, T09, T16, T17, T21, T22; partial or done as listed in the
+  test plan), on a local test instance with synthetic data. Results are recorded in the
+  Result column. No discrepancy between the code reading and the observed behavior is
+  recorded for the scenarios listed there.
 - Whether this is an intentional single-tenant assumption or an oversight has not been
   confirmed with the repository owners. Pending confirmation.
 ## STRIDE by trust boundary
@@ -215,22 +218,22 @@ Order is the sequence in which tests are planned, not a severity. P1 means the t
 | PG-T04 | TB1 I | Response and response-time comparison (many samples) for existing and non-existing objects; error response review | P2 | Not run |
 | PG-T05 | TB1 D | Bounded load tests of costly operations; review of which routes limit request rates | P2 | Not run |
 | PG-T06 | TB1 E | Access matrix across all routes and actor types | P1 | Partial, see Assumptions |
-| PG-T07 | TB2 T | Injection tests on inputs that reach queries, including search parameters | P1 | Not run |
+| PG-T07 | TB2 T | Injection tests on inputs that reach queries, including search parameters | P1 | Partial: regex search parameter on the events list, bounded patterns up to 96 characters, no timing difference observed; other inputs and the users list not run |
 | PG-T08 | TB2 T | Update path validation and parallel request tests | P2 | Not run |
-| PG-T09 | TB2 I | Response field review per route | P1 | Not run |
+| PG-T09 | TB2 I | Response field review per route | P1 | Partial: orders, tickets and attendees reviewed; remaining routes in progress |
 | PG-T10 | TB2 D | Large-data tests | P3 | Not run |
 | PG-T11 | TB2 E | Privilege review of the local test login | P3 | Not run |
 | PG-T12 | TB3 T | File type, size, malformed image and name tests in the local disk mode | P2 | Not run |
 | PG-T13 | TB3 T | Ownership tests on poster routes | P2 | Not run |
 | PG-T14 | TB3 I | Object access tests through the API and the local static route | P2 | Not run |
 | PG-T15 | TB3 D | Bounded upload tests | P3 | Not run |
-| PG-T16 | TB4 S | Payment notification tests with signatures computed locally from a made-up key | P1 | Not run |
-| PG-T17 | TB4 T | Price, quantity and boundary tests on order creation | P1 | Not run |
+| PG-T16 | TB4 S | Payment notification tests with signatures computed locally from a made-up key | P1 | Partial: notification signature and validation order tested with locally computed signatures, no discrepancy; settlement of pending paid orders and late paths not run (gateway client key not configured locally) |
+| PG-T17 | TB4 T | Price, quantity and boundary tests on order creation | P1 | Done: seven boundary scenarios, no discrepancy; the server always uses the stored ticket price |
 | PG-T18 | TB4 R | Review of audit coverage for payments and refunds | P3 | Not run |
 | PG-T19 | TB4 I | Review of responses and stored records | P2 | Not run |
 | PG-T20 | TB4 D | Failure injection with a local mock of the gateway module; stock holding tests | P2 | Not run |
-| PG-T21 | TB5 E | Access matrix and object-level tests with own and other users' identifiers | P1 | Not run |
-| PG-T22 | TB5 E | Token behavior tests after role change, deactivation and password reset | P1 | Not run |
+| PG-T21 | TB5 E | Access matrix and object-level tests with own and other users' identifiers | P1 | Partial: orders and tickets, two attendees in both directions, five scenarios, all rejected with 404; other objects not run |
+| PG-T22 | TB5 E | Token behavior tests after role change, deactivation and password reset | P1 | Partial: role change and deactivation invalidate existing access tokens immediately; password reset not run |
 | PG-T23 | TB5 T | State transition and repeat-request tests | P2 | Not run |
 | PG-T24 | TB5 R | Review of audit coverage for staff assignment, role change and account management | P3 | Not run |
 | PG-T25 | TB5 I | Response field review per role | P1 | Not run |
