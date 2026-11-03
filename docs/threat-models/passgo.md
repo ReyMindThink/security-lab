@@ -233,7 +233,7 @@ Order is the sequence in which tests are planned, not a severity. P1 means the t
 | PG-T19 | TB4 I | Review of responses and stored records | P2 | Not run |
 | PG-T20 | TB4 D | Failure injection with a local mock of the gateway module; stock holding tests | P2 | Not run |
 | PG-T21 | TB5 E | Access matrix and object-level tests with own and other users' identifiers | P1 | Partial: orders and tickets, two attendees in both directions, five scenarios, all rejected with 404; other objects not run |
-| PG-T22 | TB5 E | Token behavior tests after role change, deactivation and password reset | P1 | Partial: role change and deactivation invalidate existing access tokens immediately; password reset not run |
+| PG-T22 | TB5 E | Token behavior tests after role change, deactivation and password reset | P1 | Partial: access tokens invalidated immediately after role change, deactivation and password reset; refresh token rejected after password reset; refresh tokens after role change and deactivation not run |
 | PG-T23 | TB5 T | State transition and repeat-request tests | P2 | Not run |
 | PG-T24 | TB5 R | Review of audit coverage for staff assignment, role change and account management | P3 | Not run |
 | PG-T25 | TB5 I | Response field review per role | P1 | Not run |
