@@ -1,12 +1,12 @@
 # Threat Model: PassGo backend
 
-Status: draft, part 3 of 3 (adds the test plan). Seven test results are recorded (see the Result column and the Assumptions section). This file contains no findings.
+Status: draft, part 3 of 3 (adds the test plan). Eight test results are recorded (see the Result column and the Assumptions section). This file contains no findings.
 
 Target: gadicandra/PassGo, branch staging, commit e2bfb20 (backend only).
 
 ## Ringkasan (Bahasa Indonesia)
 - Model ancaman untuk backend PassGo (penjualan tiket acara komunitas) pada commit yang dikunci.
-- Bagian 1 memuat deskripsi sistem, aset, aktor, diagram aliran data, dan batas kepercayaan. Bagian 2 memuat analisis STRIDE per batas kepercayaan. Bagian 3 memuat rencana uji dengan ID kasus uji; semuanya berstatus Not run kecuali tujuh kasus yang tercatat di kolom Result (PG-T06, T07, T09, T16, T17, T21, T22). Hasil uji yang dicatat di dokumen ini hanya yang tercantum di kolom Result dan bagian Assumptions.
+- Bagian 1 memuat deskripsi sistem, aset, aktor, diagram aliran data, dan batas kepercayaan. Bagian 2 memuat analisis STRIDE per batas kepercayaan. Bagian 3 memuat rencana uji dengan ID kasus uji; semuanya berstatus Not run kecuali delapan kasus yang tercatat di kolom Result (PG-T06, T07, T09, T16, T17, T21, T22, T35). Hasil uji yang dicatat di dokumen ini hanya yang tercantum di kolom Result dan bagian Assumptions.
 - Disusun dari pembacaan kode oleh LLM yang belum diverifikasi mandiri oleh penulis, bukan dari menjalankan aplikasi. Hal yang bergantung pada deployment ditulis "tidak ditentukan".
 - Dokumen ini tidak memuat temuan atau detail kerentanan.
 
@@ -246,7 +246,7 @@ Order is the sequence in which tests are planned, not a severity. P1 means the t
 | PG-T32 | TB7 T | Injection tests on fields that reach email content | P2 | Not run |
 | PG-T33 | TB7 I | Review of outbox records and logs | P2 | Not run |
 | PG-T34 | TB7 D | Email count tests per user action | P2 | Not run |
-| PG-T35 | Cross-cutting | Dependency scan; install with lifecycle scripts disabled | P1 | Not run |
+| PG-T35 | Cross-cutting | Dependency scan; install with lifecycle scripts disabled | P1 | Done: dependency scan run and install with lifecycle scripts disabled tested; results private pending owner review |
 | PG-T36 | Cross-cutting | Secret scan of the pinned commit, values never printed; review of how completely configuration is documented | P1 | Not run |
 | PG-T37 | Cross-cutting | Review of what is logged and returned on errors | P3 | Not run |
 | PG-T38 | Cross-cutting | Review of how client address and protocol are determined behind a proxy | P3 | Not run |
